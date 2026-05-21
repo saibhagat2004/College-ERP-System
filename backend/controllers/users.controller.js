@@ -1,0 +1,160 @@
+import User from "../models/user.model.js"
+import bcrypt from "bcryptjs"
+
+export const createUser = async (req, res) => {
+	try {
+		const {
+			fullName = "",
+			username,
+			email,
+			password,
+			role,
+			rollNo,
+			classId,
+			subjects,
+			assignedClasses,
+			profilePicture,
+		} = req.body;
+
+		if (!role || !["admin", "teacher", "student"].includes(role)) {
+			return res.status(400).json({ error: "Invalid or missing role" });
+		}
+
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!email || !emailRegex.test(email)) {
+			return res.status(400).json({ error: "Invalid or missing email" });
+		}
+
+		const existingEmail = await User.findOne({ email });
+		if (existingEmail) return res.status(400).json({ error: "Email already taken" });
+
+		if (username) {
+			const existingUser = await User.findOne({ username });
+			if (existingUser) return res.status(400).json({ error: "Username already taken" });
+		}
+
+		let hashedPassword;
+		if (password) {
+			if (password.length < 6) return res.status(400).json({ error: "Password must be at least 6 characters" });
+			const salt = await bcrypt.genSalt(10);
+			hashedPassword = await bcrypt.hash(password, salt);
+		}
+
+		const userData = {
+			fullName,
+			username,
+			email,
+			role,
+			profilePicture: profilePicture || "",
+		};
+
+		if (hashedPassword) userData.password = hashedPassword;
+
+		if (role === "student") {
+			if (rollNo) userData.rollNo = rollNo;
+			if (classId) userData.classId = classId;
+		}
+
+		if (role === "teacher") {
+			if (subjects) {
+				userData.subjects = Array.isArray(subjects)
+					? subjects
+					: String(subjects)
+							.split(",")
+							.map((s) => s.trim())
+							.filter(Boolean);
+			}
+			if (assignedClasses) {
+				userData.assignedClasses = Array.isArray(assignedClasses)
+					? assignedClasses
+					: String(assignedClasses)
+							.split(",")
+							.map((s) => s.trim())
+							.filter(Boolean);
+			}
+		}
+
+		const newUser = new User(userData);
+		await newUser.save();
+
+		const resp = await User.findById(newUser._id).select("-password");
+		res.status(201).json(resp);
+	} catch (error) {
+		console.error("Error in createUser:", error.message);
+		res.status(500).json({ error: "Internal Server Error" });
+	}
+};
+
+export const updateUser = async (req, res) => {
+	try {
+		const { userId, updates } = req.body;
+		if (!userId || !updates) return res.status(400).json({ error: "Missing userId or updates" });
+
+		const user = await User.findById(userId);
+		if (!user) return res.status(404).json({ error: "User not found" });
+
+		Object.keys(updates).forEach((key) => {
+			if (key === "password") return; // don't allow password update here
+			user[key] = updates[key];
+		});
+
+		await user.save();
+		res.status(200).json({ message: "User updated successfully" });
+	} catch (error) {
+		console.error("Error in updateUser:", error.message);
+		res.status(500).json({ error: "Internal Server Error" });
+	}
+};
+
+export const updateUserRole = async (req, res) => {
+	try {
+		const { userId, newRole } = req.body;
+		if (!userId || !newRole) return res.status(400).json({ error: "Missing userId or newRole" });
+		if (!["admin", "teacher", "student"].includes(newRole)) return res.status(400).json({ error: "Invalid role" });
+
+		const user = await User.findById(userId);
+		if (!user) return res.status(404).json({ error: "User not found" });
+
+		user.role = newRole;
+		await user.save();
+		res.status(200).json({ message: "Role updated" });
+	} catch (error) {
+		console.error("Error in updateUserRole:", error.message);
+		res.status(500).json({ error: "Internal Server Error" });
+	}
+};
+
+export const createAdmin = async (req, res) => {
+	try {
+		// Ensure role is admin
+		req.body.role = "admin";
+		return await createUser(req, res);
+	} catch (error) {
+		console.error("Error in createAdmin:", error.message);
+		res.status(500).json({ error: "Internal Server Error" });
+	}
+};
+
+export const deleteUser = async (req, res) => {
+	try {
+		const userId = req.params.id;
+		if (!userId) return res.status(400).json({ error: "Missing user id" });
+
+		// prevent admin from deleting themselves
+		if (req.user && req.user._id && req.user._id.toString() === userId) {
+			return res.status(400).json({ error: "Cannot delete the currently authenticated admin" });
+		}
+
+		const user = await User.findById(userId);
+		if (!user) return res.status(404).json({ error: "User not found" });
+
+		await User.findByIdAndDelete(userId);
+		res.status(200).json({ message: "User deleted" });
+	} catch (error) {
+		console.error("Error in deleteUser:", error.message);
+		res.status(500).json({ error: "Internal Server Error" });
+	}
+};
+
+export default {};
+
