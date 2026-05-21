@@ -1,9 +1,8 @@
 import React from "react";
-import { useState, useEffect } from "react";
-import CreateUsers from "./Users/CreateUsers";
-import { useQuery } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 const HomePage = () => {
-  const { data: authUser } = useQuery({ queryKey: ["authUser"]});
+  const queryClient = useQueryClient();
+  const authUser = queryClient.getQueryData(["authUser"]);
   
   return (
     <div className="relative">

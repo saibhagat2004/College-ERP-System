@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 const initialFormState = {
@@ -15,42 +14,30 @@ const initialFormState = {
 	assignedClasses: "",
 };
 
+
 const CreateUsers = () => {
 	const [formData, setFormData] = useState(initialFormState);
-	const queryClient = useQueryClient();
+	const [classes, setClasses] = useState([]);
+	const [isLoadingClasses, setIsLoadingClasses] = useState(false);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	const { data: classes = [] } = useQuery({
-		queryKey: ["classes"],
-		queryFn: async () => {
-			const res = await fetch("/api/classes/list", { credentials: "include" });
-			const response = await res.json();
-			if (!res.ok) throw new Error(response.error || "Failed to fetch classes");
-			return response;
-		},
-	});
+	useEffect(() => {
+		const loadClasses = async () => {
+			setIsLoadingClasses(true);
+			try {
+				const res = await fetch("/api/classes/list", { credentials: "include" });
+				const response = await res.json();
+				if (!res.ok) throw new Error(response.error || "Failed to fetch classes");
+				setClasses(response);
+			} catch (error) {
+				toast.error(error.message);
+			} finally {
+				setIsLoadingClasses(false);
+			}
+		};
 
-	const createUserMutation = useMutation({
-		mutationFn: async (payload) => {
-			const res = await fetch("/api/users/create", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(payload),
-				credentials: "include",
-			});
-
-			const response = await res.json();
-			if (!res.ok) throw new Error(response.error || "Failed to create user");
-			return response;
-		},
-		onSuccess: () => {
-			toast.success("User created successfully");
-			queryClient.invalidateQueries({ queryKey: ["authUser"] });
-			setFormData(initialFormState);
-		},
-		onError: (error) => {
-			toast.error(error.message);
-		},
-	});
+		loadClasses();
+	}, []);
 
 	const handleChange = (e) => {
 		const { name, value } = e.target;
@@ -103,7 +90,29 @@ const CreateUsers = () => {
 			if (!formData.subjects.trim()) return toast.error("Add at least one subject for teachers");
 		}
 
-		createUserMutation.mutate(buildPayload());
+		const createUser = async () => {
+			setIsSubmitting(true);
+			try {
+				const res = await fetch("/api/users/create", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(buildPayload()),
+					credentials: "include",
+				});
+
+				const response = await res.json();
+				if (!res.ok) throw new Error(response.error || "Failed to create user");
+
+				toast.success("User created successfully");
+				setFormData(initialFormState);
+			} catch (error) {
+				toast.error(error.message);
+			} finally {
+				setIsSubmitting(false);
+			}
+		};
+
+		createUser();
 	};
 
 	return (
@@ -188,6 +197,7 @@ const CreateUsers = () => {
 								value={formData.classId}
 								onChange={handleChange}
 								className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900"
+								disabled={isLoadingClasses}
 							>
 								<option value="">Select class</option>
 								{classes.map((item) => (
@@ -222,10 +232,10 @@ const CreateUsers = () => {
 
 					<button
 						type="submit"
-						disabled={createUserMutation.isPending}
+							disabled={isSubmitting}
 						className="w-full rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
 					>
-						{createUserMutation.isPending ? "Creating..." : "Create User"}
+							{isSubmitting ? "Creating..." : "Create User"}
 					</button>
 				</form>
 			</div>

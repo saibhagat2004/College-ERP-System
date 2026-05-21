@@ -7,6 +7,7 @@ import LoginPage from "./pages/auth/login";
 import SignUpPage from "./pages/auth/SignUpPage";
 import CreateUsers from "./pages/Users/CreateUsers";
 import CreateClass from "./pages/Class/CreateClass";
+import ClassroomDetail from "./pages/Student/ClassroomDetail";
 import Navbar from "./components/NavBar";
 import LoadingSpinner from "./components/LoadingSpinner";
 
@@ -16,7 +17,6 @@ function App() {
     queryFn: async () => {
       try {
         const res = await fetch("/api/auth/me");
-        // console.log(res)
         if (!res.ok) throw new Error("Failed to fetch user");
         return res.json();
       } catch (error) {
@@ -52,6 +52,11 @@ function App() {
         <Route
           path="/admin/classes"
           element={authUser?.role === "admin" ? <CreateClass /> : <Navigate to="/" />}
+        />
+
+        <Route
+          path="/student/classroom"
+          element={authUser?.role === "student" ? <ClassroomDetail authUser={authUser} /> : <Navigate to="/" />}
         />
 
         

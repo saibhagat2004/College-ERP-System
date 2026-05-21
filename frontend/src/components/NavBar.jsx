@@ -50,6 +50,15 @@ const Navbar = ({ authUser, isGuest, setIsGuest }) => {
         )}
 
       </div>
+      
+      <div className="space-x-4 hidden md:flex">
+        {authUser?.role === "student" && (
+          <>
+        <Link to="/student/Classroom"  className="hover:text-orange-400 ml-4">Class Room</Link>
+          </>
+        )}
+  
+      </div>
 
       {/* Profile Dropdown */}
       <div className="relative">

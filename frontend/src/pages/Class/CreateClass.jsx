@@ -120,7 +120,7 @@ const CreateClass = () => {
             <input name="className" value={form.className} onChange={handleChange} placeholder="Class name" className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900" />
             <input name="section" value={form.section} onChange={handleChange} placeholder="Section" className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900" />
             <input name="userCode" value={form.userCode} onChange={handleChange} placeholder="Teacher user code (required)" className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900" />
-            <input name="students" value={form.students} onChange={handleChange} placeholder="Student user codes (comma separated)" className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900" />
+            {/* <input name="students" value={form.students} onChange={handleChange} placeholder="Student user codes (comma separated)" className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900" /> */}
           </div>
 
           <div className="flex gap-3">

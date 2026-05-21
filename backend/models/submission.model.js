@@ -1,60 +1,48 @@
-// ASSIGNMENT SCHEMA
-const assignmentSchema = new mongoose.Schema(
+// SUBMISSION SCHEMA
+const submissionSchema = new mongoose.Schema(
 {
-    title: {
-        type: String,
-        required: true
-    },
-
-    description: {
-        type: String
-    },
-
-    assignmentType: {
-        type: String,
-        enum: ["mcq", "subjective"],
-        required: true
-    },
-
-    classId: {
+    assignmentId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Class",
+        ref: "Assignment",
         required: true
     },
 
-    teacherId: {
+    studentId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true
     },
 
-    totalMarks: {
-        type: Number,
-        required: true
-    },
-
-    dueDate: {
-        type: Date,
-        required: true
-    },
-
-    fileUrl: {
+    submissionUrl: {
         type: String
     },
 
-    mcqQuestions: [
-        {
-            question: String,
+    subjectiveAnswer: {
+        type: String
+    },
 
-            options: [String],
+    obtainedMarks: {
+        type: Number,
+        default: 0
+    },
 
-            correctAnswer: String
-        }
-    ]
+    feedback: {
+        type: String
+    },
+
+    status: {
+        type: String,
+        enum: ["pending", "submitted", "evaluated", "late"],
+        default: "pending"
+    },
+
+    submittedAt: {
+        type: Date
+    }
 },
 {
     timestamps: true
 }
 )
 
-export default mongoose.model("Assignment", assignmentSchema)
+export default mongoose.model("Submission", submissionSchema)

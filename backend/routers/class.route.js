@@ -1,11 +1,14 @@
 import express from "express";
 import { protectRoute } from "../middleware/protectRoute.js";
 import { requireAdmin } from "../middleware/requireAdmin.js";
-import { createClass, getClasses, getClassById, updateClass, deleteClass } from "../controllers/class.controller.js";
+import { createClass, getClasses, getClassById, updateClass, deleteClass, getMyClass } from "../controllers/class.controller.js";
 
 const router = express.Router();
 // Public route to view all classes (no auth)
 router.get("/list", getClasses);
+
+// Logged-in student route to view only their assigned class
+router.get("/my-class", protectRoute, getMyClass);
 
 // All other class routes are admin-only
 router.use(protectRoute, requireAdmin);
