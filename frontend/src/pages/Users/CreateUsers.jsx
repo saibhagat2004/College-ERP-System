@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 const initialFormState = {
@@ -7,6 +7,7 @@ const initialFormState = {
 	username: "",
 	email: "",
 	password: "",
+	userCode: "",
 	role: "student",
 	rollNo: "",
 	classId: "",
@@ -17,6 +18,16 @@ const initialFormState = {
 const CreateUsers = () => {
 	const [formData, setFormData] = useState(initialFormState);
 	const queryClient = useQueryClient();
+
+	const { data: classes = [] } = useQuery({
+		queryKey: ["classes"],
+		queryFn: async () => {
+			const res = await fetch("/api/classes/list", { credentials: "include" });
+			const response = await res.json();
+			if (!res.ok) throw new Error(response.error || "Failed to fetch classes");
+			return response;
+		},
+	});
 
 	const createUserMutation = useMutation({
 		mutationFn: async (payload) => {
@@ -52,12 +63,13 @@ const CreateUsers = () => {
 			username: formData.username.trim(),
 			email: formData.email.trim(),
 			password: formData.password,
+			userCode: formData.userCode.trim(),
 			role: formData.role,
 		};
 
 		if (formData.role === "student") {
 			payload.rollNo = formData.rollNo.trim();
-			payload.classId = formData.classId.trim();
+			payload.classId = classes.find((item) => item._id === formData.classId) || formData.classId.trim();
 		}
 
 		if (formData.role === "teacher") {
@@ -80,6 +92,7 @@ const CreateUsers = () => {
 		if (!formData.fullName.trim()) return toast.error("Full name is required");
 		if (!formData.email.trim()) return toast.error("Email is required");
 		if (!formData.password || formData.password.length < 6) return toast.error("Password must be at least 6 characters");
+		if (!formData.userCode.trim()) return toast.error("User code is required");
 		if (!formData.role) return toast.error("Please select a role");
 
 		if (formData.role === "student" && (!formData.rollNo.trim() || !formData.classId.trim())) {
@@ -136,6 +149,14 @@ const CreateUsers = () => {
 							placeholder="Password"
 							className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900"
 						/>
+						<input
+							type="text"
+							name="userCode"
+							value={formData.userCode}
+							onChange={handleChange}
+							placeholder="User code (required)"
+							className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900"
+						/>
 					</div>
 
 					<div>
@@ -162,14 +183,19 @@ const CreateUsers = () => {
 								placeholder="Roll No"
 								className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900"
 							/>
-							<input
-								type="text"
+							<select
 								name="classId"
 								value={formData.classId}
 								onChange={handleChange}
-								placeholder="Class ID"
 								className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900"
-							/>
+							>
+								<option value="">Select class</option>
+								{classes.map((item) => (
+									<option key={item._id} value={item._id}>
+										{item.className} - {item.section}
+									</option>
+								))}
+							</select>
 						</div>
 					)}
 

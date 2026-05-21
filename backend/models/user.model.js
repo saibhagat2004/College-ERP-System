@@ -24,6 +24,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
+    userCode: {
+      type: String,
+      unique: true
+    },
   
     role: {
         type: String,

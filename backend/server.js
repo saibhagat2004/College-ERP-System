@@ -8,6 +8,7 @@ import cookieParser from "cookie-parser";
 
 import authRoutes from "./routers/auth.route.js"
 import userRouter from "./routers/user.route.js"
+import classRouter from "./routers/class.route.js"
 
 // dotenv.config(); //use to read .env content
 dotenv.config();
@@ -32,6 +33,7 @@ app.use(cookieParser());  // parses cookies attached to the client request objec
 
 app.use("/api/auth",authRoutes);
 app.use("/api/users",userRouter);
+app.use("/api/classes", classRouter);
 
  
  if (process.env.NODE_ENV === "production") {         //if we not hit our endpoint run this

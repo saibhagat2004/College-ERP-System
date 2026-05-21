@@ -43,7 +43,10 @@ const Navbar = ({ authUser, isGuest, setIsGuest }) => {
       <div className="space-x-4 hidden md:flex">
         <Link to="/" className="hover:text-orange-400">Home</Link>
         {authUser?.role === "admin" && (
-          <Link to="/admin/users/create" className="hover:text-orange-400">Create User</Link>
+          <>
+            <Link to="/admin/users/create" className="hover:text-orange-400">Create User</Link>
+            <Link to="/admin/classes" className="hover:text-orange-400 ml-4">Manage Classes</Link>
+          </>
         )}
 
       </div>

@@ -6,6 +6,7 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/auth/login";
 import SignUpPage from "./pages/auth/SignUpPage";
 import CreateUsers from "./pages/Users/CreateUsers";
+import CreateClass from "./pages/Class/CreateClass";
 import Navbar from "./components/NavBar";
 import LoadingSpinner from "./components/LoadingSpinner";
 
@@ -47,6 +48,14 @@ function App() {
           path="/admin/users/create"
           element={authUser?.role === "admin" ? <CreateUsers /> : <Navigate to="/" />}
         />
+
+        <Route
+          path="/admin/classes"
+          element={authUser?.role === "admin" ? <CreateClass /> : <Navigate to="/" />}
+        />
+
+        
+
         <Route
           path="/login"
           element={!authUser ? <LoginPage /> : <Navigate to="/" />}

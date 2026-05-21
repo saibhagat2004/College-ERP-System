@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 // CLASS SCHEMA
 const classSchema = new mongoose.Schema(
 {

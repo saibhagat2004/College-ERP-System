@@ -1,6 +1,5 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import RoleSelector from "../components/RoleSelector";
 import CreateUsers from "./Users/CreateUsers";
 import { useQuery } from "@tanstack/react-query";
 const HomePage = () => {
