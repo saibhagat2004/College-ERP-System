@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 // ASSIGNMENT SCHEMA
 const assignmentSchema = new mongoose.Schema(
 {
@@ -41,6 +43,29 @@ const assignmentSchema = new mongoose.Schema(
     fileUrl: {
         type: String
     },
+
+    submittedAssignments: [
+        {
+            submissionId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Submission",
+            },
+
+            studentId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+
+            submittedAt: {
+                type: Date,
+            },
+
+            status: {
+                type: String,
+                enum: ["submitted", "late"],
+            },
+        }
+    ],
 
     mcqQuestions: [
         {

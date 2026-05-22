@@ -2,24 +2,23 @@
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
-// import {v2 as cloudinary} from "cloudinary"
+import { v2 as cloudinary } from "cloudinary";
 import connectMongoDB  from "./db/connectMongoDB.js";
 import cookieParser from "cookie-parser";
 
 import authRoutes from "./routers/auth.route.js"
 import userRouter from "./routers/user.route.js"
 import classRouter from "./routers/class.route.js"
+import teacherRouter from "./routers/teacher.route.js"
+import assignmentRouter from "./routers/assignment.route.js"
+import submissionRouter from "./routers/submission.route.js"
 
-// dotenv.config(); //use to read .env content
-dotenv.config();
-
-// cloudinary.config(
-//     {
-//          cloud_name:process.env.CLOUDINARY_CLOUD_NAME,
-//          api_key:process.env.CLOUDINARY_API_KEY,
-//          api_secret: process.env.CLOUDINARY_API_SECRET
-//      }
-// );
+dotenv.config(); //use to read .env content
+cloudinary.config({
+	cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+	api_key: process.env.CLOUDINARY_API_KEY,
+	api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const app = express();
 const PORT=process.env.PORT || 5000
@@ -34,6 +33,9 @@ app.use(cookieParser());  // parses cookies attached to the client request objec
 app.use("/api/auth",authRoutes);
 app.use("/api/users",userRouter);
 app.use("/api/classes", classRouter);
+app.use("/api/teachers", teacherRouter);
+app.use("/api/assignments", assignmentRouter);
+app.use("/api/submissions", submissionRouter);
 
  
  if (process.env.NODE_ENV === "production") {         //if we not hit our endpoint run this

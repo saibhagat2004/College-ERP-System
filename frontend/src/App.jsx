@@ -7,7 +7,12 @@ import LoginPage from "./pages/auth/login";
 import SignUpPage from "./pages/auth/SignUpPage";
 import CreateUsers from "./pages/Users/CreateUsers";
 import CreateClass from "./pages/Class/CreateClass";
-import ClassroomDetail from "./pages/Student/ClassroomDetail";
+import ClassroomDetail from "./pages/Student/DisplayClassroom";
+import StudentAssignmentDetail from "./pages/Student/AssignmentDetail";
+import TeacherClassroom from "./pages/Teacher/TeacherClassromm";
+import CreateAssignment from "./pages/Teacher/CreateAssignment";
+import AssignmentDetail from "./pages/Teacher/AssignmentDetail";
+import SubmissionList from "./pages/Teacher/SubmissionList";
 import Navbar from "./components/NavBar";
 import LoadingSpinner from "./components/LoadingSpinner";
 
@@ -57,6 +62,31 @@ function App() {
         <Route
           path="/student/classroom"
           element={authUser?.role === "student" ? <ClassroomDetail authUser={authUser} /> : <Navigate to="/" />}
+        />
+
+        <Route
+          path="/student/assignments/:assignmentId"
+          element={authUser?.role === "student" ? <StudentAssignmentDetail /> : <Navigate to="/" />}
+        />
+
+        <Route
+          path="/teacher/classroom"
+          element={authUser?.role === "teacher" ? <TeacherClassroom authUser={authUser} /> : <Navigate to="/" />}
+        />
+
+        <Route
+          path="/teacher/assignments/new"
+          element={authUser?.role === "teacher" ? <CreateAssignment authUser={authUser} /> : <Navigate to="/" />}
+        />
+
+        <Route
+          path="/teacher/assignments/:assignmentId"
+          element={authUser?.role === "teacher" ? <AssignmentDetail /> : <Navigate to="/" />}
+        />
+
+        <Route
+          path="/teacher/assignments/:assignmentId/submissions"
+          element={authUser?.role === "teacher" ? <SubmissionList /> : <Navigate to="/" />}
         />
 
         

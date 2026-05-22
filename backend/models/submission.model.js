@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 // SUBMISSION SCHEMA
 const submissionSchema = new mongoose.Schema(
 {
@@ -25,6 +27,17 @@ const submissionSchema = new mongoose.Schema(
         type: Number,
         default: 0
     },
+    mcqAnswers: [
+        {
+            question: {
+                type: String
+            },
+
+            selectedAnswer: {
+                type: String
+            }
+        }
+    ],
 
     feedback: {
         type: String

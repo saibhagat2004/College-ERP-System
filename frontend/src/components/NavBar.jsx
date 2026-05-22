@@ -48,6 +48,9 @@ const Navbar = ({ authUser, isGuest, setIsGuest }) => {
             <Link to="/admin/classes" className="hover:text-orange-400 ml-4">Manage Classes</Link>
           </>
         )}
+        {authUser?.role === "teacher" && (
+          <Link to="/teacher/classroom" className="hover:text-orange-400 ml-4">Teacher Classroom</Link>
+        )}
 
       </div>
       
