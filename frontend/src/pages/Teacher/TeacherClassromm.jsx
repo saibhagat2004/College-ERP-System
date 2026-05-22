@@ -23,6 +23,8 @@ const TeacherClassroom = ({ authUser }) => {
 	};
 
 	useEffect(() => {
+		if (!authUser) return;
+
 		const loadClasses = async () => {
 			setIsLoading(true);
 			setError("");
@@ -48,9 +50,10 @@ const TeacherClassroom = ({ authUser }) => {
 		};
 
 		loadClasses();
-	}, []);
+	}, [authUser]);
 
 	useEffect(() => {
+		if (!authUser) return;
 		if (classes.length === 0) return;
 
 		const loadAssignments = async () => {
@@ -77,7 +80,7 @@ const TeacherClassroom = ({ authUser }) => {
 		};
 
 		loadAssignments();
-	}, [classes]);
+	}, [authUser, classes]);
 
 	if (isLoading) {
 		return (

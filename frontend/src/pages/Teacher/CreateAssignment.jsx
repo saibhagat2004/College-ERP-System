@@ -29,6 +29,7 @@ const CreateAssignment = ({ authUser }) => {
 	}, [classId]);
 
 	useEffect(() => {
+		if (!authUser) return;
 		const loadClasses = async () => {
 			setIsLoadingClasses(true);
 			try {
@@ -44,7 +45,7 @@ const CreateAssignment = ({ authUser }) => {
 		};
 
 		loadClasses();
-	}, []);
+	}, [authUser]);
 
 	const handleChange = (e) => {
 		const { name, value } = e.target;

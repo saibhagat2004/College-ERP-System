@@ -23,6 +23,7 @@ const DisplayClassroom = ({ authUser }) => {
 	};
 
 	useEffect(() => {
+		if (!authUser) return;
 		if (!authUser?.classId) {
 			setError("No classroom is assigned to your account yet.");
 			return;
@@ -56,6 +57,7 @@ const DisplayClassroom = ({ authUser }) => {
 	}, [authUser?.classId]);
 
 	useEffect(() => {
+		if (!authUser) return;
 		if (!authUser?.classId) return;
 
 		const loadAssignments = async () => {

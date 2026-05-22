@@ -16,7 +16,8 @@ const Navbar = ({ authUser, isGuest, setIsGuest }) => {
     },
     onSuccess: () => {
       toast.success("Logout successful");
-      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      queryClient.setQueryData(["authUser"], null);
+      setIsDropdownOpen(false);
       navigate("/login");
     },
     onError: () => {
@@ -33,38 +34,39 @@ const Navbar = ({ authUser, isGuest, setIsGuest }) => {
   };
 
   return (
-    <nav className="bg-gray-900 text-white p-4 flex justify-between items-center">
-      {/* Logo */}
-      <div className="text-lg font-semibold">
-        <Link to="/">NavBar</Link>
+    <nav className="flex items-center justify-between gap-4 bg-gray-900 px-4 py-3 text-white">
+      <div className="shrink-0 text-lg font-semibold">
+        <Link to="/" className="inline-flex items-center">
+          NavBar
+        </Link>
       </div>
 
-      {/* Navigation Links */}
-      <div className="space-x-4 hidden md:flex">
-        <Link to="/" className="hover:text-orange-400">Home</Link>
+      <div className="hidden flex-1 items-center justify-center gap-6 md:flex">
         {authUser?.role === "admin" && (
           <>
-            <Link to="/admin/users/create" className="hover:text-orange-400">Create User</Link>
-            <Link to="/admin/classes" className="hover:text-orange-400 ml-4">Manage Classes</Link>
+            <Link to="/admin/users/create" className="whitespace-nowrap hover:text-orange-400">
+              Create User
+            </Link>
+            <Link to="/admin/classes" className="whitespace-nowrap hover:text-orange-400">
+              Manage Classes
+            </Link>
           </>
         )}
+
         {authUser?.role === "teacher" && (
-          <Link to="/teacher/classroom" className="hover:text-orange-400 ml-4">Teacher Classroom</Link>
+          <Link to="/teacher/classroom" className="whitespace-nowrap hover:text-orange-400">
+            Teacher Classroom
+          </Link>
         )}
 
-      </div>
-      
-      <div className="space-x-4 hidden md:flex">
         {authUser?.role === "student" && (
-          <>
-        <Link to="/student/Classroom"  className="hover:text-orange-400 ml-4">Class Room</Link>
-          </>
+          <Link to="/student/classroom" className="whitespace-nowrap hover:text-orange-400">
+            Class Room
+          </Link>
         )}
-  
       </div>
 
-      {/* Profile Dropdown */}
-      <div className="relative">
+      <div className="relative shrink-0">
         {authUser ? (
           <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="focus:outline-none">
             <img 
@@ -78,7 +80,7 @@ const Navbar = ({ authUser, isGuest, setIsGuest }) => {
         )}
 
         {isDropdownOpen && (
-          <div className="absolute right-0 mt-2 w-40 bg-white text-black rounded-md shadow-lg z-50">
+          <div className="absolute right-0 z-50 mt-2 w-40 rounded-md bg-white text-black shadow-lg">
             <ul className="py-2">
               <li>
                 <Link to="/DashBoardPage" className="block px-4 py-2 hover:bg-gray-200">Profile</Link>

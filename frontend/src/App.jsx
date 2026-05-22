@@ -2,7 +2,6 @@ import React from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
-import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/auth/login";
 import SignUpPage from "./pages/auth/SignUpPage";
 import CreateUsers from "./pages/Users/CreateUsers";
@@ -17,6 +16,16 @@ import Navbar from "./components/NavBar";
 import LoadingSpinner from "./components/LoadingSpinner";
 
 function App() {
+  const getDefaultRoute = () => {
+    if (!authUser) return "/login";
+
+    if (authUser.role === "student") return "/student/classroom";
+    if (authUser.role === "teacher") return "/teacher/classroom";
+    if (authUser.role === "admin") return "/admin/users/create";
+
+    return "/login";
+  };
+
   const { data: authUser, isLoading } = useQuery({
     queryKey: ["authUser"],
     queryFn: async () => {
@@ -47,7 +56,7 @@ function App() {
       <Routes>
         <Route
           path="/"
-          element={authUser ? <HomePage/> : <Navigate to="/login" />}
+          element={<Navigate to={getDefaultRoute()} replace />}
         />
         <Route
           path="/admin/users/create"

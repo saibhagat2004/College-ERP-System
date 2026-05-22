@@ -66,11 +66,6 @@ const AssignmentDetail = () => {
 			return;
 		}
 
-		if (!selectedFile && assignment.assignmentType === "mcq") {
-			toast.error("Upload a document if required, or submit your MCQ answers");
-			return;
-		}
-
 		setIsSubmitting(true);
 		try {
 			const res = await fetch(`/api/submissions/assignment/${assignmentId}`, {
@@ -177,6 +172,10 @@ const AssignmentDetail = () => {
 							<p className="mt-1 text-lg font-semibold text-slate-900">{teacher?.fullName || "N/A"}</p>
 							<p className="text-sm text-slate-500">{teacher?.email || ""}</p>
 							<p className="text-sm text-slate-500">User code: {teacher?.userCode || "N/A"}</p>
+
+							<div>
+
+				</div>
 						</div>
 
 						{assignment.fileUrl && (
@@ -190,47 +189,22 @@ const AssignmentDetail = () => {
 					</div>
 
 					<div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-						<p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-400">Questions</p>
-						<h2 className="mt-2 text-2xl font-bold text-slate-900">Assignment question set</h2>
-
-						{assignment.assignmentType === "mcq" ? (
-							Array.isArray(assignment.mcqQuestions) && assignment.mcqQuestions.length > 0 ? (
-								<div className="mt-5 space-y-4">
-									{assignment.mcqQuestions.map((question, index) => (
-										<div key={`${index}-${question.question}`} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-											<p className="font-semibold text-slate-900">{index + 1}. {question.question}</p>
-											<div className="mt-3 grid gap-2 sm:grid-cols-2">
-												{(question.options || []).map((option) => (
-													<span key={option} className="rounded-xl bg-white px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-200">{option}</span>
-												))}
-											</div>
-											<p className="mt-3 text-sm text-slate-500">Correct answer: {question.correctAnswer || "N/A"}</p>
-										</div>
-									))}
-								</div>
-							) : (
-								<div className="mt-5 rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-slate-500">
-									No MCQ questions attached to this assignment.
-								</div>
-							)
-						) : (
-							<div className="mt-5 rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-slate-500">
-								This is a subjective assignment. The question prompt is shown in the description above.
-							</div>
-						)}
-
 						<form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-3xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
 							<div>
 								<p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-400">Submit assignment</p>
-								<h3 className="mt-1 text-xl font-bold text-slate-900">Upload document and answer</h3>
+								<h3 className="mt-1 text-xl font-bold text-slate-900">
+									{assignment.assignmentType === "mcq" ? "Select your answers" : "Upload document and answer"}
+								</h3>
 							</div>
 
-							<label className="flex cursor-pointer flex-col gap-2 rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-4 transition hover:border-slate-900 hover:bg-slate-50">
-								<span className="text-sm font-semibold text-slate-900">Select a document or image</span>
-								<span className="text-sm text-slate-500">PDF, DOC, DOCX, TXT, JPG, PNG, PPT, PPTX</span>
-								<span className="text-sm text-slate-700">{selectedFile ? selectedFile.name : "No file selected"}</span>
-								<input type="file" accept="image/*,.pdf,.doc,.docx,.txt,.ppt,.pptx" onChange={handleFileChange} className="hidden" />
-							</label>
+							{assignment.assignmentType !== "mcq" && (
+								<label className="flex cursor-pointer flex-col gap-2 rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-4 transition hover:border-slate-900 hover:bg-slate-50">
+									<span className="text-sm font-semibold text-slate-900">Select a document or image</span>
+									<span className="text-sm text-slate-500">PDF, DOC, DOCX, TXT, JPG, PNG, PPT, PPTX</span>
+									<span className="text-sm text-slate-700">{selectedFile ? selectedFile.name : "No file selected"}</span>
+									<input type="file" accept="image/*,.pdf,.doc,.docx,.txt,.ppt,.pptx" onChange={handleFileChange} className="hidden" />
+								</label>
+							)}
 
 							{assignment.assignmentType === "mcq" ? (
 								<div className="space-y-3">
