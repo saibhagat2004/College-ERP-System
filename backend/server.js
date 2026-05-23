@@ -29,7 +29,7 @@ app.use(express.urlencoded({extended:true})); //to parse from data(urlencoded)
   
 app.use(cookieParser());  // parses cookies attached to the client request object, 
                           //making them accessible via req.cookies. 
-
+						  
 app.use("/api/auth",authRoutes);
 app.use("/api/users",userRouter);
 app.use("/api/classes", classRouter);

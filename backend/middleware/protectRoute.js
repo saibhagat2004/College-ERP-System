@@ -22,7 +22,6 @@ export const protectRoute=async(req,res,next)=>{  //if valid it run next functio
 
     req.user= user; //If the user is found, the user object is attached to the req object (req.user = user). This makes the user object available to subsequent middleware functions or route handlers.
                    //user object can contail all thing like username, email , followers etc. but we don't want to send password so we use select("-password") in above line.
-    
         
     next();
    } catch (error) {

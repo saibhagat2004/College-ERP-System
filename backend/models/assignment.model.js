@@ -70,9 +70,7 @@ const assignmentSchema = new mongoose.Schema(
     mcqQuestions: [
         {
             question: String,
-
             options: [String],
-
             correctAnswer: String
         }
     ]

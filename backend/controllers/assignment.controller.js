@@ -20,7 +20,6 @@ const uploadBufferToCloudinary = (fileBuffer, fileName) =>
 				resolve(result);
 			},
 		);
-
 		stream.end(fileBuffer);
 	});
 
