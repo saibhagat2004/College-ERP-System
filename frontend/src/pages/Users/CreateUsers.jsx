@@ -5,6 +5,7 @@ const initialFormState = {
 	fullName: "",
 	username: "",
 	email: "",
+	gender: "",
 	password: "",
 	userCode: "",
 	role: "student",
@@ -49,6 +50,7 @@ const CreateUsers = () => {
 			fullName: formData.fullName.trim(),
 			username: formData.username.trim(),
 			email: formData.email.trim(),
+			gender: formData.gender,
 			password: formData.password,
 			userCode: formData.userCode.trim(),
 			role: formData.role,
@@ -78,6 +80,7 @@ const CreateUsers = () => {
 
 		if (!formData.fullName.trim()) return toast.error("Full name is required");
 		if (!formData.email.trim()) return toast.error("Email is required");
+		if (!formData.gender) return toast.error("Gender is required");
 		if (!formData.password || formData.password.length < 6) return toast.error("Password must be at least 6 characters");
 		if (!formData.userCode.trim()) return toast.error("User code is required");
 		if (!formData.role) return toast.error("Please select a role");
@@ -166,6 +169,17 @@ const CreateUsers = () => {
 							placeholder="User code (required)"
 							className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900"
 						/>
+						<select
+							name="gender"
+							value={formData.gender}
+							onChange={handleChange}
+							className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900"
+						>
+							<option value="">Select gender</option>
+							<option value="male">Male</option>
+							<option value="female">Female</option>
+							<option value="other">Other</option>
+						</select>
 					</div>
 
 					<div>

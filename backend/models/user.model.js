@@ -11,6 +11,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+      required: true,
+    },
     password: {
       type: String,
       minLength: 6,
@@ -45,15 +50,37 @@ const userSchema = new mongoose.Schema(
         ref: "Class"
     },
 
-    feesStatus: {
+    fees: {
+      tuitionFees: {
+        type: Number,
+        min: 0,
+        default: 0,
+      },
+      developmentFees: {
+        type: Number,
+        min: 0,
+        default: 0,
+      },
+      totalFees: {
+        type: Number,
+        min: 0,
+        default: 0,
+      },
+      paidAmount: {
+        type: Number,
+        min: 0,
+        default: 0,
+      },
+      remainingAmount: {
+        type: Number,
+        min: 0,
+        default: 0,
+      },
+      paymentStatus: {
         type: String,
-        enum: ["paid", "pending"],
-        required: function () {            //if role = student → feesStatus MUST exist
-            return this.role === "student";
-        },
-        default: function () {
-            return this.role === "student" ? "pending" : undefined;
-        }
+        enum: ["paid", "pending", "partial"],
+        default: "pending",
+      },
     },
 
     // Teacher Fields

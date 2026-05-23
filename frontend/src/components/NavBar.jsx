@@ -47,6 +47,9 @@ const Navbar = ({ authUser, isGuest, setIsGuest }) => {
             <Link to="/admin/users/create" className="whitespace-nowrap hover:text-orange-400">
               Create User
             </Link>
+            <Link to="/admin/students" className="whitespace-nowrap hover:text-orange-400">
+              All Students
+            </Link>
             <Link to="/admin/classes" className="whitespace-nowrap hover:text-orange-400">
               Manage Classes
             </Link>

@@ -18,4 +18,21 @@ router.get("/my-classes", protectRoute, authorizeRoles("teacher"), async (req, r
 	}
 });
 
+router.get("/classes/:classId/students", protectRoute, authorizeRoles("teacher"), async (req, res) => {
+	try {
+		const classDoc = await Class.findOne({ _id: req.params.classId, teacherId: req.user._id })
+			.populate("teacherId", "fullName email userCode profilePicture")
+			.populate("students", "fullName email userCode rollNo gender profilePicture fees");
+
+		if (!classDoc) {
+			return res.status(404).json({ error: "Class not found" });
+		}
+
+		return res.json(classDoc);
+	} catch (error) {
+		console.error("Error fetching class students:", error.message);
+		return res.status(500).json({ error: "Internal Server Error" });
+	}
+});
+
 export default router;

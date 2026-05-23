@@ -5,10 +5,13 @@ import { Toaster } from "react-hot-toast";
 import LoginPage from "./pages/auth/login";
 import SignUpPage from "./pages/auth/SignUpPage";
 import CreateUsers from "./pages/Users/CreateUsers";
+import AllStudents from "./pages/Users/AllStudents";
 import CreateClass from "./pages/Class/CreateClass";
 import ClassroomDetail from "./pages/Student/DisplayClassroom";
+import StudentFees from "./pages/Student/Fees";
 import StudentAssignmentDetail from "./pages/Student/AssignmentDetail";
 import TeacherClassroom from "./pages/Teacher/TeacherClassromm";
+import ClassStudents from "./pages/Teacher/ClassStudents";
 import CreateAssignment from "./pages/Teacher/CreateAssignment";
 import AssignmentDetail from "./pages/Teacher/AssignmentDetail";
 import SubmissionList from "./pages/Teacher/SubmissionList";
@@ -64,6 +67,11 @@ function App() {
         />
 
         <Route
+          path="/admin/students"
+          element={authUser?.role === "admin" ? <AllStudents /> : <Navigate to="/" />}
+        />
+
+        <Route
           path="/admin/classes"
           element={authUser?.role === "admin" ? <CreateClass /> : <Navigate to="/" />}
         />
@@ -74,6 +82,11 @@ function App() {
         />
 
         <Route
+          path="/student/fees"
+          element={authUser?.role === "student" ? <StudentFees authUser={authUser} /> : <Navigate to="/" />}
+        />
+
+        <Route
           path="/student/assignments/:assignmentId"
           element={authUser?.role === "student" ? <StudentAssignmentDetail /> : <Navigate to="/" />}
         />
@@ -81,6 +94,11 @@ function App() {
         <Route
           path="/teacher/classroom"
           element={authUser?.role === "teacher" ? <TeacherClassroom authUser={authUser} /> : <Navigate to="/" />}
+        />
+
+        <Route
+          path="/teacher/classes/:classId/students"
+          element={authUser?.role === "teacher" ? <ClassStudents /> : <Navigate to="/" />}
         />
 
         <Route

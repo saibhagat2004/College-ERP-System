@@ -18,6 +18,19 @@ const classSchema = new mongoose.Schema(
         ref: "User"
     },
 
+    feesStructure: {
+        tuitionFees: {
+            type: Number,
+            min: 0,
+            default: 0
+        },
+        developmentFees: {
+            type: Number,
+            min: 0,
+            default: 0
+        }
+    },
+
     students: [
         {
             type: mongoose.Schema.Types.ObjectId,

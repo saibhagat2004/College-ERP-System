@@ -138,8 +138,6 @@ const LoginPage = ({ onGuestLogin }) => {
                   {loginMutation.isPending ? "Signing in..." : "Login"}
                 </button>
               </form>
-
-
             </div>
           </div>
         </div>

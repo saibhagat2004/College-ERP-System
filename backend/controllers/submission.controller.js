@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import Assignment from "../models/assignment.model.js";
 import Submission from "../models/submission.model.js";
+import { calculateMcqMarks, updateSubmissionMarks as persistSubmissionMarks } from "../utils/submissionMarks.js";
 
 const uploadBufferToCloudinary = (fileBuffer, fileName) =>
 	new Promise((resolve, reject) => {
@@ -67,8 +68,13 @@ export const submitAssignment = async (req, res) => {
 		}
 
 		const cleanedAnswer = subjectiveAnswer?.trim() || "";
-		if (assignment.assignmentType === "mcq" && parsedMcqAnswers.length === 0) {
-			return res.status(400).json({ error: "Submit answers for the MCQ assignment" });
+		let obtainedMarks = 0;
+		if (assignment.assignmentType === "mcq") {
+			if (parsedMcqAnswers.length === 0) {
+				return res.status(400).json({ error: "Submit answers for the MCQ assignment" });
+			}
+
+			obtainedMarks = calculateMcqMarks(assignment.mcqQuestions, parsedMcqAnswers);
 		}
 
 		if (assignment.assignmentType !== "mcq" && !cleanedAnswer && !submissionUrl) {
@@ -82,9 +88,14 @@ export const submitAssignment = async (req, res) => {
 			submissionUrl,
 			subjectiveAnswer: cleanedAnswer,
 			mcqAnswers: parsedMcqAnswers,
+			obtainedMarks,
 			status,
 			submittedAt: new Date(),
 		});
+
+		if (assignment.assignmentType === "mcq") {
+			await persistSubmissionMarks(submission, obtainedMarks);
+		}
 
 		await Assignment.findByIdAndUpdate(assignmentId, {
 			$push: {
@@ -125,6 +136,38 @@ export const getSubmissionsByAssignment = async (req, res) => {
 		return res.json(submissions);
 	} catch (error) {
 		console.error("Error fetching submissions:", error.message);
+		return res.status(500).json({ error: "Internal Server Error" });
+	}
+};
+
+export const updateSubmissionMarks = async (req, res) => {
+	try {
+		if (req.user.role !== "teacher") {
+			return res.status(403).json({ error: "Only teachers can update marks" });
+		}
+
+		const { submissionId } = req.params;
+		const { obtainedMarks, feedback } = req.body;
+
+		const marks = Number(obtainedMarks);
+		if (Number.isNaN(marks) || marks < 0) {
+			return res.status(400).json({ error: "obtainedMarks must be a valid non-negative number" });
+		}
+
+		const submission = await Submission.findById(submissionId).populate("assignmentId", "teacherId");
+		if (!submission) {
+			return res.status(404).json({ error: "Submission not found" });
+		}
+
+		if (!submission.assignmentId || submission.assignmentId.teacherId.toString() !== req.user._id.toString()) {
+			return res.status(403).json({ error: "You can only update marks for your own assignments" });
+		}
+
+		await persistSubmissionMarks(submission, marks, feedback);
+
+		return res.json(submission);
+	} catch (error) {
+		console.error("Error updating submission marks:", error.message);
 		return res.status(500).json({ error: "Internal Server Error" });
 	}
 };

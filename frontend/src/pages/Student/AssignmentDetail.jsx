@@ -141,6 +141,8 @@ const AssignmentDetail = () => {
 	const teacher = assignment.teacherId;
 	const isSubmitted = Boolean(assignment.isSubmitted);
 	const submissionStatus = assignment.submissionStatus || assignment.mySubmission?.status || null;
+	const obtainedMarks = assignment.mySubmission?.obtainedMarks;
+	const hasMarks = obtainedMarks !== undefined && obtainedMarks !== null;
 
 	return (
 		<div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.08),_transparent_35%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] px-4 py-8 md:px-8">
@@ -172,10 +174,18 @@ const AssignmentDetail = () => {
 							<p className="mt-1 text-lg font-semibold text-slate-900">{teacher?.fullName || "N/A"}</p>
 							<p className="text-sm text-slate-500">{teacher?.email || ""}</p>
 							<p className="text-sm text-slate-500">User code: {teacher?.userCode || "N/A"}</p>
-
-							<div>
-
-				</div>
+							{hasMarks && (
+								<div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+									<p className="text-sm text-emerald-700">Marks awarded</p>
+									<p className="mt-1 text-2xl font-bold text-emerald-900">
+										{obtainedMarks}
+										{assignment.totalMarks !== undefined && assignment.totalMarks !== null ? ` / ${assignment.totalMarks}` : ""}
+									</p>
+									{assignment.mySubmission?.feedback && (
+										<p className="mt-2 text-sm text-emerald-800">Feedback: {assignment.mySubmission.feedback}</p>
+									)}
+								</div>
+							)}
 						</div>
 
 						{assignment.fileUrl && (

@@ -3,7 +3,12 @@ import User from "../models/user.model.js";
 
 export const createClass = async (req, res) => {
   try {
-    const { className, section, userCode } = req.body; // expect teacher userCode in `userCode`
+    const {
+      className,
+      section,
+      userCode,
+      feesStructure = {},
+    } = req.body; // expect teacher userCode in `userCode`
 
     if (!userCode) return res.status(400).json({ error: "Missing teacher userCode" });
 
@@ -14,6 +19,10 @@ export const createClass = async (req, res) => {
       className,
       section,
       teacherId: teacher._id,
+      feesStructure: {
+        tuitionFees: Number(feesStructure.tuitionFees) || 0,
+        developmentFees: Number(feesStructure.developmentFees) || 0,
+      },
     });
 
     // Add this class to the teacher's assignedClasses (avoid duplicates)
@@ -59,7 +68,7 @@ export const getMyClass = async (req, res) => {
       },
       {
         path: "students",
-        select: "fullName email userCode profilePicture role rollNo classId feesStatus",
+        select: "fullName email userCode profilePicture role rollNo classId gender",
       },
     ]);
 
@@ -87,11 +96,22 @@ export const getClassById = async (req, res) => {
 
 export const updateClass = async (req, res) => {
   try {
-    const { className, section, userCode } = req.body; // expect teacher userCode when updating
+    const {
+      className,
+      section,
+      userCode,
+      feesStructure,
+    } = req.body; // expect teacher userCode when updating
 
     const updatePayload = {};
     if (className !== undefined) updatePayload.className = className;
     if (section !== undefined) updatePayload.section = section;
+    if (feesStructure !== undefined) {
+      updatePayload.feesStructure = {
+        tuitionFees: Number(feesStructure.tuitionFees) || 0,
+        developmentFees: Number(feesStructure.developmentFees) || 0,
+      };
+    }
 
     let newTeacher = null;
     if (userCode !== undefined) {

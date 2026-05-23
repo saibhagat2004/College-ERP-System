@@ -168,6 +168,15 @@ const DisplayClassroom = ({ authUser }) => {
 							<div className="mt-8 rounded-2xl border border-white/10 bg-slate-900/70 p-4 text-sm text-slate-300">
 								Your classroom details are loaded from your `classId` reference, so this view always matches the class assigned in your user record.
 							</div>
+
+							<div className="mt-4">
+								<Link
+									to="/student/fees"
+									className="inline-flex items-center justify-center rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+								>
+									Pay Fees
+								</Link>
+							</div>
 						</div>
 					</div>
 				</section>
@@ -260,7 +269,6 @@ const DisplayClassroom = ({ authUser }) => {
 
 											<div className="text-right text-sm text-slate-500">
 												<p>{student.userCode || "No code"}</p>
-												<p className="mt-1 capitalize">{student.feesStatus || "pending"}</p>
 											</div>
 										</div>
 									);

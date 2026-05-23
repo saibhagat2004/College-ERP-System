@@ -9,10 +9,12 @@ export const createUser = async (req, res) => {
 			username,
 			email,
 			password,
+			gender,
 			role,
 			userCode,
 			rollNo,
 			classId,
+			paidAmount = 0,
 			subjects,
 			assignedClasses,
 			profilePicture,
@@ -40,6 +42,10 @@ export const createUser = async (req, res) => {
 			return res.status(400).json({ error: "User code is required" });
 		}
 
+		if (!gender || !["male", "female", "other"].includes(gender)) {
+			return res.status(400).json({ error: "Valid gender is required" });
+		}
+
 		const existingUserCode = await User.findOne({ userCode });
 		if (existingUserCode) return res.status(400).json({ error: "User code already taken" });
 
@@ -54,6 +60,7 @@ export const createUser = async (req, res) => {
 			fullName,
 			username,
 			email,
+			gender,
 			role,
 			userCode,
 			profilePicture: profilePicture || "",
@@ -94,6 +101,25 @@ export const createUser = async (req, res) => {
 				await User.findByIdAndDelete(newUser._id);
 				return res.status(400).json({ error: "Invalid classId" });
 			}
+
+			const tuitionFees = Number(classDoc.feesStructure?.tuitionFees) || 0;
+			const classDevelopmentFees = Number(classDoc.feesStructure?.developmentFees) || 0;
+			const studentDevelopmentFees = gender === "female" ? 0 : classDevelopmentFees;
+			const totalFees = tuitionFees + studentDevelopmentFees;
+			const paidAmountValue = Number(paidAmount) || 0;
+			const remainingAmount = Math.max(totalFees - paidAmountValue, 0);
+			const paymentStatus = paidAmountValue >= totalFees ? "paid" : paidAmountValue > 0 ? "partial" : "pending";
+
+			await User.findByIdAndUpdate(newUser._id, {
+				fees: {
+					tuitionFees,
+					developmentFees: studentDevelopmentFees,
+					totalFees,
+					paidAmount: paidAmountValue,
+					remainingAmount,
+					paymentStatus,
+				},
+			});
 
 			await Class.findByIdAndUpdate(normalizedClassId, {
 				$addToSet: { students: newUser._id },
@@ -204,6 +230,19 @@ export const getTeachers = async (req, res) => {
 		return res.status(200).json(teachers);
 	} catch (error) {
 		console.error("Error in getTeachers:", error.message);
+		return res.status(500).json({ error: "Internal Server Error" });
+	}
+};
+
+export const getStudents = async (req, res) => {
+	try {
+		const students = await User.find({ role: "student" })
+			.select("fullName username email userCode gender rollNo role classId fees profilePicture createdAt")
+			.populate("classId", "className section feesStructure");
+
+		return res.status(200).json(students);
+	} catch (error) {
+		console.error("Error in getStudents:", error.message);
 		return res.status(500).json({ error: "Internal Server Error" });
 	}
 };

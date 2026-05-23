@@ -191,10 +191,10 @@ const TeacherClassroom = ({ authUser }) => {
 											Assign assignment
 										</Link>
 										<Link
-											to={`/teacher/assignments/new?classId=${cls._id}`}
+											to={`/teacher/classes/${cls._id}/students`}
 											className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-white"
 										>
-											Open class assignment form
+											View class students
 										</Link>
 									</div>
 

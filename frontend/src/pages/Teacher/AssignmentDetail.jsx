@@ -10,8 +10,93 @@ const formatDate = (value) => {
 const AssignmentDetail = () => {
 	const { assignmentId } = useParams();
 	const [assignment, setAssignment] = useState(null);
+	const [submissions, setSubmissions] = useState([]);
 	const [isLoading, setIsLoading] = useState(true);
+	const [submissionsLoading, setSubmissionsLoading] = useState(false);
 	const [error, setError] = useState("");
+	const [submissionsError, setSubmissionsError] = useState("");
+	const [markInputs, setMarkInputs] = useState({});
+	const [updatingSubmissionId, setUpdatingSubmissionId] = useState("");
+
+	const maxMarks = Number(assignment?.totalMarks);
+	const hasMaxMarks = Number.isFinite(maxMarks);
+
+	const loadSubmissions = async () => {
+		setSubmissionsLoading(true);
+		setSubmissionsError("");
+
+		try {
+			const res = await fetch(`/api/submissions/assignment/${assignmentId}`, { credentials: "include" });
+			const json = await res.json();
+			if (!res.ok) throw new Error(json.error || "Failed to load submissions");
+
+			setSubmissions(json);
+			setMarkInputs(
+				json.reduce((accumulator, submission) => {
+					accumulator[submission._id] = submission.obtainedMarks ?? "";
+					return accumulator;
+				}, {}),
+			);
+		} catch (fetchError) {
+			const message = fetchError.message || "Failed to load submissions";
+			setSubmissionsError(message);
+			toast.error(message);
+		} finally {
+			setSubmissionsLoading(false);
+		}
+	};
+
+	const handleMarkChange = (submissionId, value) => {
+		setMarkInputs((prev) => ({
+			...prev,
+			[submissionId]: value,
+		}));
+	};
+
+	const handleMarkSubmit = async (submissionId) => {
+		const rawValue = markInputs[submissionId];
+		const marks = Number(rawValue);
+
+		if (rawValue === "" || Number.isNaN(marks)) {
+			toast.error("Enter valid marks before saving");
+			return;
+		}
+
+		if (marks < 0) {
+			toast.error("Marks cannot be negative");
+			return;
+		}
+
+		if (hasMaxMarks && marks > maxMarks) {
+			toast.error(`Marks cannot exceed ${maxMarks}`);
+			return;
+		}
+
+		setUpdatingSubmissionId(submissionId);
+
+		try {
+			const res = await fetch(`/api/submissions/${submissionId}/marks`, {
+				method: "PATCH",
+				headers: { "Content-Type": "application/json" },
+				credentials: "include",
+				body: JSON.stringify({ obtainedMarks: marks }),
+			});
+
+			const json = await res.json();
+			if (!res.ok) throw new Error(json.error || "Failed to update marks");
+
+			setSubmissions((prev) => prev.map((submission) => (submission._id === submissionId ? json : submission)));
+			setMarkInputs((prev) => ({
+				...prev,
+				[submissionId]: json.obtainedMarks ?? marks,
+			}));
+			toast.success("Marks updated successfully");
+		} catch (updateError) {
+			toast.error(updateError.message || "Failed to update marks");
+		} finally {
+			setUpdatingSubmissionId("");
+		}
+	};
 
 	useEffect(() => {
 		const loadAssignment = async () => {
@@ -23,6 +108,13 @@ const AssignmentDetail = () => {
 				const json = await res.json();
 				if (!res.ok) throw new Error(json.error || "Failed to load assignment details");
 				setAssignment(json);
+				if (json.assignmentType === "subjective") {
+					await loadSubmissions();
+				} else {
+					setSubmissions([]);
+					setSubmissionsError("");
+					setMarkInputs({});
+				}
 			} catch (fetchError) {
 				const message = fetchError.message || "Failed to load assignment details";
 				setError(message);
@@ -101,27 +193,121 @@ const AssignmentDetail = () => {
 					</div>
 
 					<div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-						<p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-400">MCQ data</p>
-						<h2 className="mt-2 text-2xl font-bold text-slate-900">Question set</h2>
+						{assignment.assignmentType === "mcq" ? (
+							<>
+								<p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-400">MCQ data</p>
+								<h2 className="mt-2 text-2xl font-bold text-slate-900">Question set</h2>
 
-						{Array.isArray(assignment.mcqQuestions) && assignment.mcqQuestions.length > 0 ? (
-							<div className="mt-5 space-y-4">
-								{assignment.mcqQuestions.map((question, index) => (
-									<div key={`${index}-${question.question}`} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-										<p className="font-semibold text-slate-900">{index + 1}. {question.question}</p>
-										<div className="mt-3 grid gap-2 sm:grid-cols-2">
-											{(question.options || []).map((option) => (
-												<span key={option} className="rounded-xl bg-white px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-200">{option}</span>
-											))}
-										</div>
-										<p className="mt-3 text-sm text-slate-500">Correct answer: {question.correctAnswer || "N/A"}</p>
+								{Array.isArray(assignment.mcqQuestions) && assignment.mcqQuestions.length > 0 ? (
+									<div className="mt-5 space-y-4">
+										{assignment.mcqQuestions.map((question, index) => (
+											<div key={`${index}-${question.question}`} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+												<p className="font-semibold text-slate-900">{index + 1}. {question.question}</p>
+												<div className="mt-3 grid gap-2 sm:grid-cols-2">
+													{(question.options || []).map((option) => (
+														<span key={option} className="rounded-xl bg-white px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-200">{option}</span>
+													))}
+												</div>
+												<p className="mt-3 text-sm text-slate-500">Correct answer: {question.correctAnswer || "N/A"}</p>
+											</div>
+										))}
 									</div>
-								))}
-							</div>
+								) : (
+									<div className="mt-5 rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-slate-500">
+										No MCQ questions attached to this assignment.
+									</div>
+								)}
+							</>
 						) : (
-							<div className="mt-5 rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-slate-500">
-								No MCQ questions attached to this assignment.
-							</div>
+							<>
+								<div className="flex items-start justify-between gap-4">
+									<div>
+										<p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-400">Subjective grading</p>
+										<h2 className="mt-2 text-2xl font-bold text-slate-900">Enter marks for each submission</h2>
+									</div>
+									{hasMaxMarks && (
+										<span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
+											Total marks: {maxMarks}
+										</span>
+									)}
+								</div>
+
+								{submissionsLoading ? (
+									<div className="mt-5 rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-slate-500">
+										Loading student submissions...
+									</div>
+								) : submissionsError ? (
+									<div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-8 text-center text-rose-700">
+										{submissionsError}
+									</div>
+								) : submissions.length > 0 ? (
+									<div className="mt-5 space-y-4">
+										{submissions.map((submission) => (
+											<div key={submission._id} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+												<div className="flex flex-wrap items-start justify-between gap-3">
+													<div>
+														<p className="text-lg font-bold text-slate-900">{submission.studentId?.fullName || "Student"}</p>
+														<p className="text-sm text-slate-500">{submission.studentId?.email || "No email"}</p>
+														<p className="text-sm text-slate-500">User code: {submission.studentId?.userCode || "N/A"}</p>
+													</div>
+													<span className={`rounded-full px-3 py-1 text-xs font-semibold ${submission.status === "late" ? "bg-amber-100 text-amber-700" : submission.status === "evaluated" ? "bg-sky-100 text-sky-700" : "bg-emerald-100 text-emerald-700"}`}>
+														{submission.status || "submitted"}
+													</span>
+												</div>
+
+												<div className="mt-4 space-y-3 text-sm text-slate-600">
+													<p>Submitted at: <span className="font-semibold text-slate-900">{formatDate(submission.submittedAt || submission.createdAt)}</span></p>
+													{submission.submissionUrl && (
+														<div>
+															<p className="text-slate-500">File</p>
+															<a href={submission.submissionUrl} target="_blank" rel="noreferrer" className="font-semibold text-sky-700 underline">
+																Open uploaded file
+															</a>
+														</div>
+													)}
+
+													{submission.subjectiveAnswer && (
+														<div className="rounded-2xl border border-slate-200 bg-white p-3">
+															<p className="text-slate-500">Subjective answer</p>
+															<p className="mt-1 whitespace-pre-wrap text-slate-900">{submission.subjectiveAnswer}</p>
+														</div>
+													)}
+
+													<div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:grid-cols-[1fr_auto] sm:items-end">
+														<div>
+															<label className="mb-2 block text-sm font-medium text-slate-700" htmlFor={`marks-${submission._id}`}>
+																Marks {hasMaxMarks ? `(0 - ${maxMarks})` : "(0 or more)"}
+															</label>
+															<input
+																id={`marks-${submission._id}`}
+																type="number"
+																min="0"
+																max={hasMaxMarks ? maxMarks : undefined}
+																step="1"
+																value={markInputs[submission._id]}
+																onChange={(event) => handleMarkChange(submission._id, event.target.value)}
+																className="w-full rounded-xl border border-slate-300 px-4 py-2 text-slate-900 outline-none transition focus:border-sky-400"
+															/>
+														</div>
+														<button
+															type="button"
+															onClick={() => handleMarkSubmit(submission._id)}
+															disabled={updatingSubmissionId === submission._id}
+															className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
+														>
+															{updatingSubmissionId === submission._id ? "Saving..." : "Save marks"}
+														</button>
+													</div>
+												</div>
+											</div>
+										))}
+									</div>
+								) : (
+									<div className="mt-5 rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-slate-500">
+										No subjective submissions yet.
+									</div>
+								)}
+							</>
 						)}
 					</div>
 				</section>

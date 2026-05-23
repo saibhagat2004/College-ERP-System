@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-const initialForm = { className: "", section: "", userCode: "", students: "" };
+const initialForm = {
+  className: "",
+  section: "",
+  userCode: "",
+  tuitionFees: "",
+  developmentFees: "",
+  students: "",
+};
 
 const CreateClass = () => {
   const [form, setForm] = useState(initialForm);
@@ -43,6 +50,10 @@ const CreateClass = () => {
       className: form.className.trim(),
       section: form.section.trim(),
       userCode: form.userCode.trim(),
+      feesStructure: {
+        tuitionFees: Number(form.tuitionFees) || 0,
+        developmentFees: Number(form.developmentFees) || 0,
+      },
     };
 
     if (form.students.trim()) {
@@ -80,6 +91,8 @@ const CreateClass = () => {
       className: cls.className || "",
       section: cls.section || "",
       userCode: cls.teacherId?.userCode || cls.teacherId || "",
+      tuitionFees: cls.feesStructure?.tuitionFees ?? "",
+      developmentFees: cls.feesStructure?.developmentFees ?? "",
       students: (cls.students || []).map((s) => s.userCode || s._id || s).join(", "),
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -120,6 +133,8 @@ const CreateClass = () => {
             <input name="className" value={form.className} onChange={handleChange} placeholder="Class name" className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900" />
             <input name="section" value={form.section} onChange={handleChange} placeholder="Section" className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900" />
             <input name="userCode" value={form.userCode} onChange={handleChange} placeholder="Teacher user code (required)" className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900" />
+            <input name="tuitionFees" type="number" min="0" value={form.tuitionFees} onChange={handleChange} placeholder="Tuition fees" className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900" />
+            <input name="developmentFees" type="number" min="0" value={form.developmentFees} onChange={handleChange} placeholder="Development fees" className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900" />
             {/* <input name="students" value={form.students} onChange={handleChange} placeholder="Student user codes (comma separated)" className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900" /> */}
           </div>
 

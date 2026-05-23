@@ -149,7 +149,7 @@ export const getAssignmentById = async (req, res) => {
 		}
 
 		if (req.user?.role === "student") {
-			const mySubmission = await Submission.findOne({ assignmentId: assignment._id, studentId: req.user._id }).select("status submittedAt submissionUrl subjectiveAnswer mcqAnswers");
+			const mySubmission = await Submission.findOne({ assignmentId: assignment._id, studentId: req.user._id }).select("status submittedAt submissionUrl subjectiveAnswer mcqAnswers obtainedMarks feedback");
 			assignment = assignment.toObject();
 			assignment.mySubmission = mySubmission;
 			assignment.isSubmitted = Boolean(mySubmission);
