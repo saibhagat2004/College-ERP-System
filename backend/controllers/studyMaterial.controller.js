@@ -160,6 +160,7 @@ export const deleteStudyMaterial = async (req, res) => {
 export const getStudyMaterials = async (req, res) => {
 	try {
 		let filter = {};
+		const requestedClassId = req.query.classId;
 
 		if (req.user.role === "student") {
 			const classId = req.user.classId?._id?.toString() ?? req.user.classId?.toString();
@@ -167,11 +168,15 @@ export const getStudyMaterials = async (req, res) => {
 				return res.status(404).json({ error: "No class assigned to this student" });
 			}
 
+			if (requestedClassId && requestedClassId !== classId) {
+				return res.status(403).json({ error: "You can only view materials for your own class" });
+			}
+
 			filter = { classId };
 		}
 
 		if (req.user.role === "teacher") {
-			filter = { teacherId: req.user._id };
+			filter = requestedClassId ? { teacherId: req.user._id, classId: requestedClassId } : { teacherId: req.user._id };
 		}
 
 		const studyMaterials = await StudyMaterial.find(filter)

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import ClassDetailCard from "../../components/ClassDetailCard";
 
 const emptyQuestion = { question: "", options: "", correctAnswer: "" };
 
@@ -23,6 +24,7 @@ const CreateAssignment = ({ authUser }) => {
 		fileUrl: "",
 	});
 	const [questions, setQuestions] = useState([emptyQuestion]);
+	const selectedClass = classes.find((cls) => cls._id === form.classId);
 
 	useEffect(() => {
 		setForm((current) => ({ ...current, classId }));
@@ -127,14 +129,18 @@ const CreateAssignment = ({ authUser }) => {
 
 	return (
 		<div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.08),_transparent_35%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] px-4 py-8 md:px-8">
-			<div className="mx-auto max-w-4xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl shadow-slate-900/10">
-				<div className="bg-slate-950 px-6 py-8 text-white sm:px-8">
-					<p className="text-sm uppercase tracking-[0.3em] text-slate-400">Teacher workspace</p>
-					<h1 className="mt-2 text-3xl font-black">Create assignment</h1>
-					<p className="mt-2 max-w-2xl text-sm text-slate-300">Create an assignment for a specific classroom. The class selector is prefilled from the button on the classroom page.</p>
-				</div>
+			<div className="mx-auto max-w-5xl space-y-6">
+				<section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-950 text-white shadow-2xl shadow-slate-900/10">
+					<div className="p-6 sm:p-8">
+						<p className="text-sm uppercase tracking-[0.3em] text-slate-400">Teacher workspace</p>
+						<h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">Create assignment</h1>
+						<p className="mt-3 max-w-3xl text-base leading-7 text-slate-300">Create an assignment for a specific classroom. The class selector is prefilled from the classroom page.</p>
+					</div>
+				</section>
 
-				<form onSubmit={handleSubmit} className="space-y-6 p-6 sm:p-8">
+				<ClassDetailCard classData={selectedClass} title="Selected class" subtitle="Review the class before creating an assignment" />
+
+				<form onSubmit={handleSubmit} className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8 space-y-6">
 					<div className="grid gap-4 md:grid-cols-2">
 						<input name="title" value={form.title} onChange={handleChange} placeholder="Assignment title" className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900" />
 						<select name="assignmentType" value={form.assignmentType} onChange={handleChange} className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900">
@@ -155,7 +161,6 @@ const CreateAssignment = ({ authUser }) => {
 							<span>{selectedFile ? selectedFile.name : "Select document or image to upload"}</span>
 							<input type="file" accept="image/*,.pdf,.doc,.docx,.ppt,.pptx,.txt" onChange={handleFileChange} className="hidden" />
 						</label>
-						<input name="fileUrl" value={form.fileUrl} onChange={handleChange} placeholder="Optional file URL" className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900 md:col-span-2" />
 						<textarea name="description" value={form.description} onChange={handleChange} placeholder="Assignment description" rows="4" className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900 md:col-span-2" />
 					</div>
 
@@ -199,7 +204,7 @@ const CreateAssignment = ({ authUser }) => {
 						</button>
 					</div>
 				</form>
-			</div>
+				</div>
 		</div>
 	);
 };

@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
+import ClassDetailCard from "../../components/ClassDetailCard";
 
 const emptyForm = {
 	title: "",
@@ -15,6 +16,8 @@ const formatDate = (value) => {
 };
 
 const StudyMaterials = ({ authUser }) => {
+	const location = useLocation();
+	const classId = useMemo(() => new URLSearchParams(location.search).get("classId") || "", [location.search]);
 	const [classes, setClasses] = useState([]);
 	const [materials, setMaterials] = useState([]);
 	const [form, setForm] = useState(emptyForm);
@@ -24,6 +27,12 @@ const StudyMaterials = ({ authUser }) => {
 	const [isLoadingMaterials, setIsLoadingMaterials] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [error, setError] = useState("");
+
+	useEffect(() => {
+		setForm((current) => ({ ...current, classId }));
+	}, [classId]);
+
+	const selectedClass = classes.find((cls) => cls._id === form.classId);
 
 	const loadClasses = async () => {
 		setIsLoadingClasses(true);
@@ -44,7 +53,8 @@ const StudyMaterials = ({ authUser }) => {
 		setError("");
 
 		try {
-			const res = await fetch("/api/study-material", { credentials: "include" });
+			const query = classId ? `?classId=${classId}` : "";
+			const res = await fetch(`/api/study-material${query}`, { credentials: "include" });
 			const json = await res.json();
 			if (!res.ok) throw new Error(json.error || "Failed to load study materials");
 			setMaterials(json);
@@ -61,7 +71,7 @@ const StudyMaterials = ({ authUser }) => {
 		if (!authUser) return;
 		loadClasses();
 		loadMaterials();
-	}, [authUser]);
+	}, [authUser, classId]);
 
 	const handleChange = (event) => {
 		const { name, value } = event.target;
@@ -160,6 +170,8 @@ const StudyMaterials = ({ authUser }) => {
 					</div>
 				</section>
 
+				<ClassDetailCard classData={selectedClass} title="Selected class" subtitle="Review the class before publishing a study material" />
+
 				<section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
 					<div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
 						<div className="flex items-center justify-between gap-4">
@@ -209,6 +221,7 @@ const StudyMaterials = ({ authUser }) => {
 									name="description"
 									value={form.description}
 									onChange={handleChange}
+									disabled={Boolean(classId) && !editingId}
 									placeholder="Description"
 									rows="4"
 									className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900"

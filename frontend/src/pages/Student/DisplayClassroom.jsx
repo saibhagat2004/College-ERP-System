@@ -17,6 +17,9 @@ const DisplayClassroom = ({ authUser }) => {
 	const [isLoadingAssignments, setIsLoadingAssignments] = useState(false);
 	const [error, setError] = useState("");
 
+	const [notices, setNotices] = useState([]);
+	const [isLoadingNotices, setIsLoadingNotices] = useState(false);
+
 	const formatDueDate = (value) => {
 		if (!value) return "No due date";
 		return new Date(value).toLocaleString();
@@ -82,6 +85,26 @@ const DisplayClassroom = ({ authUser }) => {
 
 		loadAssignments();
 	}, [authUser?.classId]);
+
+	useEffect(() => {
+		if (!classData?._id) return;
+
+		const loadNotices = async () => {
+			setIsLoadingNotices(true);
+			try {
+				const res = await fetch(`/api/notice?classId=${classData._id}`, { credentials: "include" });
+				const json = await res.json();
+				if (!res.ok) throw new Error(json.error || "Failed to load notices");
+				setNotices(json || []);
+			} catch (err) {
+				toast.error(err.message || "Failed to load notices");
+			} finally {
+				setIsLoadingNotices(false);
+			}
+		};
+
+		loadNotices();
+	}, [classData?._id]);
 
 	if (isLoading) {
 		return (
@@ -228,6 +251,32 @@ const DisplayClassroom = ({ authUser }) => {
 								)}
 							</div>
 						</div>
+
+						{/* Class notices (moved under Subjects) */}
+						<div className="mt-6">
+							<p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-400">Class Notices</p>
+							<div className="mt-3">
+								{isLoadingNotices ? (
+									<div className="text-sm text-slate-500">Loading notices...</div>
+								) : notices.length > 0 ? (
+									<div className="space-y-3">
+										{notices.map((note) => (
+											<div key={note._id} className="rounded-lg border border-slate-200 bg-white p-3">
+												<div className="flex items-start justify-between">
+													<div>
+														<p className="text-sm font-semibold text-slate-900">{note.title}</p>
+														<p className="text-xs text-slate-500">{note.noticeType || "Notice"} • {new Date(note.createdAt).toLocaleDateString()}</p>
+													</div>
+												</div>
+												<p className="mt-2 text-sm text-slate-600 line-clamp-2">{note.description}</p>
+											</div>
+										))}
+									</div>
+								) : (
+									<p className="text-sm text-slate-500">No notices for this class.</p>
+								)}
+							</div>
+						</div>
 					</div>
 
 					<div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
@@ -342,6 +391,8 @@ const DisplayClassroom = ({ authUser }) => {
 					</div>
 				</section>
 			</div>
+
+			
 		</div>
 	);
 };

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 const formatDate = (value) => {
@@ -9,6 +9,7 @@ const formatDate = (value) => {
 
 const AssignmentDetail = () => {
 	const { assignmentId } = useParams();
+	const navigate = useNavigate();
 	const [assignment, setAssignment] = useState(null);
 	const [submissions, setSubmissions] = useState([]);
 	const [isLoading, setIsLoading] = useState(true);
@@ -17,6 +18,12 @@ const AssignmentDetail = () => {
 	const [submissionsError, setSubmissionsError] = useState("");
 	const [markInputs, setMarkInputs] = useState({});
 	const [updatingSubmissionId, setUpdatingSubmissionId] = useState("");
+
+	// edit state
+	const [isEditing, setIsEditing] = useState(false);
+	const [editForm, setEditForm] = useState({ title: "", description: "", assignmentType: "subjective", totalMarks: "", dueDate: "" });
+	const [editFile, setEditFile] = useState(null);
+	const [isSavingEdit, setIsSavingEdit] = useState(false);
 
 	const maxMarks = Number(assignment?.totalMarks);
 	const hasMaxMarks = Number.isFinite(maxMarks);
@@ -108,6 +115,13 @@ const AssignmentDetail = () => {
 				const json = await res.json();
 				if (!res.ok) throw new Error(json.error || "Failed to load assignment details");
 				setAssignment(json);
+				setEditForm({
+					title: json.title || "",
+					description: json.description || "",
+					assignmentType: json.assignmentType || "subjective",
+					totalMarks: json.totalMarks ?? "",
+					dueDate: json.dueDate || "",
+				});
 				if (json.assignmentType === "subjective") {
 					await loadSubmissions();
 				} else {
@@ -126,6 +140,56 @@ const AssignmentDetail = () => {
 
 		loadAssignment();
 	}, [assignmentId]);
+
+	const handleEditChange = (field, value) => setEditForm((p) => ({ ...p, [field]: value }));
+
+	const handleFileChange = (e) => setEditFile(e.target.files?.[0] || null);
+
+	const handleSaveEdit = async () => {
+		setIsSavingEdit(true);
+		try {
+			const formData = new FormData();
+			formData.append("title", editForm.title);
+			formData.append("description", editForm.description);
+			formData.append("assignmentType", editForm.assignmentType);
+			formData.append("totalMarks", editForm.totalMarks === "" ? "" : String(editForm.totalMarks));
+			formData.append("dueDate", editForm.dueDate || "");
+			if (editFile) formData.append("assignmentFile", editFile);
+
+			const res = await fetch(`/api/assignments/${assignmentId}`, {
+				method: "PUT",
+				credentials: "include",
+				body: formData,
+			});
+
+			const json = await res.json();
+			if (!res.ok) throw new Error(json.error || "Failed to update assignment");
+
+			setAssignment(json);
+			setIsEditing(false);
+			toast.success("Assignment updated");
+		} catch (err) {
+			toast.error(err.message || "Failed to update assignment");
+		} finally {
+			setIsSavingEdit(false);
+		}
+	};
+
+	const handleDelete = async () => {
+		if (!confirm("Delete this assignment? This will remove all submissions as well.")) return;
+		try {
+			const res = await fetch(`/api/assignments/${assignmentId}`, {
+				method: "DELETE",
+				credentials: "include",
+			});
+			const json = await res.json();
+			if (!res.ok) throw new Error(json.error || "Failed to delete assignment");
+			toast.success("Assignment deleted");
+			navigate("/teacher/classroom");
+		} catch (err) {
+			toast.error(err.message || "Failed to delete assignment");
+		}
+	};
 
 	if (isLoading) {
 		return (
@@ -166,6 +230,27 @@ const AssignmentDetail = () => {
 							<span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">Due: {formatDate(assignment.dueDate)}</span>
 							<span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">Marks: {assignment.totalMarks ?? "N/A"}</span>
 						</div>
+
+						{isEditing && (
+							<div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 text-slate-900">
+								<p className="text-sm font-semibold">Edit Assignment</p>
+								<div className="mt-3 grid gap-3">
+									<input value={editForm.title} onChange={(e) => handleEditChange("title", e.target.value)} className="rounded-xl border px-3 py-2" />
+									<textarea value={editForm.description} onChange={(e) => handleEditChange("description", e.target.value)} className="rounded-xl border px-3 py-2" rows={3} />
+									<select value={editForm.assignmentType} onChange={(e) => handleEditChange("assignmentType", e.target.value)} className="rounded-xl border px-3 py-2">
+										<option value="subjective">Subjective</option>
+										<option value="mcq">MCQ</option>
+									</select>
+									<input type="number" value={editForm.totalMarks} onChange={(e) => handleEditChange("totalMarks", e.target.value)} placeholder="Total marks" className="rounded-xl border px-3 py-2" />
+									<input type="datetime-local" value={editForm.dueDate ? new Date(editForm.dueDate).toISOString().slice(0,16) : ""} onChange={(e) => handleEditChange("dueDate", e.target.value)} className="rounded-xl border px-3 py-2" />
+									<input type="file" onChange={handleFileChange} />
+									<div className="mt-2 flex gap-2">
+										<button type="button" onClick={handleSaveEdit} disabled={isSavingEdit} className="rounded-xl bg-slate-900 px-4 py-2 text-white">{isSavingEdit ? "Saving..." : "Save changes"}</button>
+										<button type="button" onClick={() => setIsEditing(false)} className="rounded-xl border px-4 py-2">Cancel</button>
+									</div>
+								</div>
+							</div>
+						)}
 					</div>
 				</section>
 
@@ -321,12 +406,21 @@ const AssignmentDetail = () => {
 				</section>
 
 				<div className="flex flex-wrap gap-3">
-					<Link to="/teacher/classroom" className="inline-flex items-center rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-white">
+					<Link
+						to={classInfo?._id ? `/teacher/classes/${classInfo._id}` : "/teacher/classroom"}
+						className="inline-flex items-center rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-white"
+					>
 						Back to classroom
 					</Link>
 					<Link to={`/teacher/assignments/${assignmentId}/submissions`} className="inline-flex items-center rounded-xl bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-700">
 						View submissions
 					</Link>
+					<button type="button" onClick={() => setIsEditing(true)} className="inline-flex items-center rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-white">
+						Edit assignment
+					</button>
+					<button type="button" onClick={handleDelete} className="inline-flex items-center rounded-xl bg-rose-600 px-5 py-3 font-semibold text-white transition hover:bg-rose-700">
+						Delete assignment
+					</button>
 				</div>
 			</div>
 		</div>

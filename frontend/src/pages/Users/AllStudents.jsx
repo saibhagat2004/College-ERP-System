@@ -5,23 +5,89 @@ const AllStudents = () => {
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const loadStudents = async () => {
-      setIsLoading(true);
-      try {
-        const res = await fetch("/api/users/students", { credentials: "include" });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error || "Failed to fetch students");
-        setStudents(json);
-      } catch (error) {
-        toast.error(error.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const loadStudents = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/users/students", { credentials: "include" });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to fetch students");
+      setStudents(json);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadStudents();
   }, []);
+
+  const [editingId, setEditingId] = useState("");
+  const [editForm, setEditForm] = useState({ fullName: "", email: "", userCode: "", rollNo: "" });
+  const [isSaving, setIsSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState("");
+
+  const startEdit = (student) => {
+    setEditingId(student._id);
+    setEditForm({ fullName: student.fullName || "", email: student.email || "", userCode: student.userCode || "", rollNo: student.rollNo || "" });
+  };
+
+  const cancelEdit = () => {
+    setEditingId("");
+    setEditForm({ fullName: "", email: "", userCode: "", rollNo: "" });
+  };
+
+  const handleEditChange = (field, value) => setEditForm((p) => ({ ...p, [field]: value }));
+
+  const saveEdit = async (studentId) => {
+    setIsSaving(true);
+    try {
+      const payload = { userId: studentId, updates: {} };
+      // only send changed fields
+      if (editForm.fullName !== undefined) payload.updates.fullName = editForm.fullName;
+      if (editForm.email !== undefined) payload.updates.email = editForm.email;
+      if (editForm.userCode !== undefined) payload.updates.userCode = editForm.userCode;
+      if (editForm.rollNo !== undefined) payload.updates.rollNo = editForm.rollNo;
+
+      const res = await fetch("/api/users/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to update user");
+
+      toast.success("User updated");
+      cancelEdit();
+      await loadStudents();
+    } catch (err) {
+      toast.error(err.message || "Failed to update user");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const deleteUser = async (studentId) => {
+    if (!confirm("Delete this user? This action cannot be undone.")) return;
+    setDeletingId(studentId);
+    try {
+      const res = await fetch(`/api/users/${studentId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to delete user");
+      toast.success("User deleted");
+      await loadStudents();
+    } catch (err) {
+      toast.error(err.message || "Failed to delete user");
+    } finally {
+      setDeletingId("");
+    }
+  };
 
   const formatCurrency = (value) => {
     const numberValue = Number(value) || 0;
@@ -66,19 +132,40 @@ const AllStudents = () => {
                   {students.map((student) => (
                     <tr key={student._id} className="align-top hover:bg-slate-50">
                       <td className="px-4 py-4">
-                        <p className="font-semibold text-slate-900">{student.fullName || "Unnamed student"}</p>
-                        <p className="text-xs text-slate-500">{student.userCode}</p>
+                        {editingId === student._id ? (
+                          <>
+                            <input value={editForm.fullName} onChange={(e) => handleEditChange("fullName", e.target.value)} className="w-full rounded-md border px-2 py-1" />
+                            <p className="text-xs text-slate-500 mt-1">{student.userCode}</p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="font-semibold text-slate-900">{student.fullName || "Unnamed student"}</p>
+                            <p className="text-xs text-slate-500">{student.userCode}</p>
+                          </>
+                        )}
                       </td>
                       <td className="px-4 py-4">
-                        <p>{student.email}</p>
-                        <p className="text-xs text-slate-500">{student.username || "No username"}</p>
+                        {editingId === student._id ? (
+                          <input value={editForm.email} onChange={(e) => handleEditChange("email", e.target.value)} className="w-full rounded-md border px-2 py-1" />
+                        ) : (
+                          <>
+                            <p>{student.email}</p>
+                            <p className="text-xs text-slate-500">{student.username || "No username"}</p>
+                          </>
+                        )}
                       </td>
                       <td className="px-4 py-4">
                         <p className="font-medium text-slate-900">{student.classId?.className || "N/A"}</p>
                         <p className="text-xs text-slate-500">{student.classId?.section || ""}</p>
                       </td>
                       <td className="px-4 py-4 capitalize">{student.gender || "N/A"}</td>
-                      <td className="px-4 py-4">{student.rollNo || "N/A"}</td>
+                      <td className="px-4 py-4">
+                        {editingId === student._id ? (
+                          <input value={editForm.rollNo} onChange={(e) => handleEditChange("rollNo", e.target.value)} className="w-24 rounded-md border px-2 py-1" />
+                        ) : (
+                          student.rollNo || "N/A"
+                        )}
+                      </td>
                       <td className="px-4 py-4">{formatCurrency(student.fees?.totalFees)}</td>
                       <td className="px-4 py-4">{formatCurrency(student.fees?.paidAmount)}</td>
                       <td className="px-4 py-4">{formatCurrency(student.fees?.remainingAmount)}</td>
@@ -86,6 +173,19 @@ const AllStudents = () => {
                         <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
                           {student.fees?.paymentStatus || "pending"}
                         </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        {editingId === student._id ? (
+                          <div className="flex gap-2">
+                            <button onClick={() => saveEdit(student._id)} disabled={isSaving} className="rounded-md bg-slate-900 px-3 py-1 text-white">{isSaving ? "Saving..." : "Save"}</button>
+                            <button onClick={cancelEdit} className="rounded-md border px-3 py-1">Cancel</button>
+                          </div>
+                        ) : (
+                          <div className="flex gap-2">
+                            <button onClick={() => startEdit(student)} className="rounded-md border px-3 py-1">Edit</button>
+                            <button onClick={() => deleteUser(student._id)} disabled={deletingId === student._id} className="rounded-md bg-rose-600 px-3 py-1 text-white">{deletingId === student._id ? "Deleting..." : "Delete"}</button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}

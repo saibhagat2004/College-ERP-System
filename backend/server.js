@@ -14,6 +14,7 @@ import assignmentRouter from "./routers/assignment.route.js"
 import submissionRouter from "./routers/submission.route.js"
 import paymentRouter from "./routers/payment.route.js"
 import studyMaterialRouter from "./routers/studyMaterial.route.js"
+import noticeRouter from "./routers/notice.route.js"
 
 dotenv.config(); //use to read .env content
 cloudinary.config({
@@ -40,6 +41,7 @@ app.use("/api/assignments", assignmentRouter);
 app.use("/api/submissions", submissionRouter);
 app.use("/api/payment", paymentRouter);
 app.use("/api/study-material", studyMaterialRouter);
+app.use("/api/notice", noticeRouter);
 
  
  if (process.env.NODE_ENV === "production") {         //if we not hit our endpoint run this

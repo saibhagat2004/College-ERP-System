@@ -142,27 +142,28 @@ export const updateUser = async (req, res) => {
 		const user = await User.findById(userId);
 		if (!user) return res.status(404).json({ error: "User not found" });
 
+		const updatePayload = {};
 		Object.keys(updates).forEach((key) => {
-			if (key === "password") return; // don't allow password update here
-			user[key] = updates[key];
+			if (key === "password") return;
+			if (updates[key] !== undefined) updatePayload[key] = updates[key];
 		});
 
-		if (updates.classId && typeof updates.classId === "object") {
-			user.classId = updates.classId._id;
+		if (updatePayload.classId && typeof updatePayload.classId === "object") {
+			updatePayload.classId = updatePayload.classId._id;
 		}
 
-		if (!user.userCode) {
-			return res.status(400).json({ error: "User code is required" });
-		}
-
-		if (updates.userCode) {
-			const existingUserCode = await User.findOne({ userCode: updates.userCode });
+		if (updatePayload.userCode) {
+			const existingUserCode = await User.findOne({ userCode: updatePayload.userCode });
 			if (existingUserCode && existingUserCode._id.toString() !== userId) {
 				return res.status(400).json({ error: "User code already taken" });
 			}
 		}
 
-		await user.save();
+		if (!user.userCode && !updatePayload.userCode) {
+			return res.status(400).json({ error: "User code is required" });
+		}
+
+		await User.findByIdAndUpdate(userId, updatePayload, { new: true, runValidators: false });
 		res.status(200).json({ message: "User updated successfully" });
 	} catch (error) {
 		console.error("Error in updateUser:", error.message);

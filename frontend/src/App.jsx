@@ -13,6 +13,7 @@ import StudentAssignmentDetail from "./pages/Student/AssignmentDetail";
 import TeacherClassroom from "./pages/Teacher/TeacherClassromm";
 import ClassStudents from "./pages/Teacher/ClassStudents";
 import CreateAssignment from "./pages/Teacher/CreateAssignment";
+import CreateNotice from "./pages/Teacher/CreateNotice";
 import AssignmentDetail from "./pages/Teacher/AssignmentDetail";
 import SubmissionList from "./pages/Teacher/SubmissionList";
 import TeacherStudyMaterials from "./pages/Teacher/StudyMaterials";
@@ -39,7 +40,7 @@ function App() {
         if (!res.ok) throw new Error("Failed to fetch user");
         return res.json();
       } catch (error) {
-        console.error("Auth error:", error);
+        // console.error("Auth error:", error);
         return null;
       }
     },
@@ -99,8 +100,18 @@ function App() {
         />
 
         <Route
+          path="/teacher/classes/:classId"
+          element={authUser?.role === "teacher" ? <ClassStudents /> : <Navigate to="/" />}
+        />
+
+        <Route
           path="/teacher/classes/:classId/students"
           element={authUser?.role === "teacher" ? <ClassStudents /> : <Navigate to="/" />}
+        />
+
+        <Route
+          path="/teacher/notices/create"
+          element={authUser?.role === "teacher" ? <CreateNotice authUser={authUser} /> : <Navigate to="/" />}
         />
 
         <Route

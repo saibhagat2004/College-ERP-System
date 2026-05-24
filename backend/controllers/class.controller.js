@@ -174,6 +174,7 @@ export const deleteClass = async (req, res) => {
 export const getTeacherClasses = async (req, res) => {
   try {
     const classes = await Class.find({ teacherId: req.user._id })
+      .populate("teacherId", "fullName email userCode profilePicture")
       .populate("students", "fullName email userCode rollNo profilePicture")
       .sort({ createdAt: -1 });
 

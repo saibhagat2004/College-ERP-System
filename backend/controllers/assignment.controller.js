@@ -207,3 +207,89 @@ export const getAssignmentById = async (req, res) => {
 		return res.status(500).json({ error: "Internal Server Error" });
 	}
 };
+
+export const updateAssignment = async (req, res) => {
+	try {
+		const { assignmentId } = req.params;
+
+		const assignment = await Assignment.findById(assignmentId);
+		if (!assignment) return res.status(404).json({ error: "Assignment not found" });
+
+		// Only teachers who created the assignment or admins can update
+		if (req.user?.role === "teacher") {
+			if (assignment.teacherId?.toString() !== req.user._id.toString()) {
+				return res.status(403).json({ error: "You can only update your own assignments" });
+			}
+		} else if (req.user?.role !== "admin") {
+			return res.status(403).json({ error: "Only teachers or admins can update assignments" });
+		}
+
+		const { title, description, assignmentType, totalMarks, dueDate, mcqQuestions } = req.body;
+
+		if (title !== undefined) assignment.title = title.trim();
+		if (description !== undefined) assignment.description = description?.trim() || "";
+		if (assignmentType !== undefined) assignment.assignmentType = assignmentType;
+		if (totalMarks !== undefined) assignment.totalMarks = totalMarks === "" ? undefined : Number(totalMarks);
+		if (dueDate !== undefined) assignment.dueDate = dueDate;
+
+		// parse mcqQuestions if provided
+		if (mcqQuestions !== undefined) {
+			if (typeof mcqQuestions === "string" && mcqQuestions.trim()) {
+				try {
+					assignment.mcqQuestions = JSON.parse(mcqQuestions);
+				} catch {
+					return res.status(400).json({ error: "mcqQuestions must be valid JSON" });
+				}
+			} else if (Array.isArray(mcqQuestions)) {
+				assignment.mcqQuestions = mcqQuestions;
+			} else {
+				assignment.mcqQuestions = [];
+			}
+		}
+
+		// handle optional file replacement
+		if (req.file) {
+			const uploadResult = await uploadBufferToCloudinary(req.file.buffer, req.file.originalname);
+			assignment.fileUrl = uploadResult.secure_url || assignment.fileUrl || "";
+		}
+
+		const updated = await assignment.save();
+
+		return res.json(updated);
+	} catch (error) {
+		console.error("Error updating assignment:", error.message);
+		return res.status(500).json({ error: "Internal Server Error" });
+	}
+};
+
+export const deleteAssignment = async (req, res) => {
+	try {
+		const { assignmentId } = req.params;
+
+		const assignment = await Assignment.findById(assignmentId);
+		if (!assignment) return res.status(404).json({ error: "Assignment not found" });
+
+		// Only teachers who created the assignment or admins can delete
+		if (req.user?.role === "teacher") {
+			if (assignment.teacherId?.toString() !== req.user._id.toString()) {
+				return res.status(403).json({ error: "You can only delete your own assignments" });
+			}
+		} else if (req.user?.role !== "admin") {
+			return res.status(403).json({ error: "Only teachers or admins can delete assignments" });
+		}
+
+		// delete related submissions
+		try {
+			await Submission.deleteMany({ assignmentId: assignment._id });
+		} catch (err) {
+			console.error("Failed to delete submissions for assignment:", err.message);
+		}
+
+		await Assignment.findByIdAndDelete(assignmentId);
+
+		return res.json({ message: "Assignment deleted" });
+	} catch (error) {
+		console.error("Error deleting assignment:", error.message);
+		return res.status(500).json({ error: "Internal Server Error" });
+	}
+};
