@@ -57,15 +57,25 @@ const Navbar = ({ authUser, isGuest, setIsGuest }) => {
         )}
 
         {authUser?.role === "teacher" && (
-          <Link to="/teacher/classroom" className="whitespace-nowrap hover:text-orange-400">
-            Teacher Classroom
-          </Link>
+          <>
+            <Link to="/teacher/classroom" className="whitespace-nowrap hover:text-orange-400">
+              Teacher Classroom
+            </Link>
+            <Link to="/teacher/study-materials" className="whitespace-nowrap hover:text-orange-400">
+              Study Materials
+            </Link>
+          </>
         )}
 
         {authUser?.role === "student" && (
-          <Link to="/student/classroom" className="whitespace-nowrap hover:text-orange-400">
-            Class Room
-          </Link>
+          <>
+            <Link to="/student/classroom" className="whitespace-nowrap hover:text-orange-400">
+              Class Room
+            </Link>
+            <Link to="/student/study-materials" className="whitespace-nowrap hover:text-orange-400">
+              Study Materials
+            </Link>
+          </>
         )}
       </div>
 

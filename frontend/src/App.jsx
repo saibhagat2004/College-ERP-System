@@ -15,6 +15,8 @@ import ClassStudents from "./pages/Teacher/ClassStudents";
 import CreateAssignment from "./pages/Teacher/CreateAssignment";
 import AssignmentDetail from "./pages/Teacher/AssignmentDetail";
 import SubmissionList from "./pages/Teacher/SubmissionList";
+import TeacherStudyMaterials from "./pages/Teacher/StudyMaterials";
+import StudentStudyMaterials from "./pages/Student/StudyMaterials";
 import Navbar from "./components/NavBar";
 import LoadingSpinner from "./components/LoadingSpinner";
 
@@ -107,6 +109,11 @@ function App() {
         />
 
         <Route
+          path="/teacher/study-materials"
+          element={authUser?.role === "teacher" ? <TeacherStudyMaterials authUser={authUser} /> : <Navigate to="/" />}
+        />
+
+        <Route
           path="/teacher/assignments/:assignmentId"
           element={authUser?.role === "teacher" ? <AssignmentDetail /> : <Navigate to="/" />}
         />
@@ -122,6 +129,12 @@ function App() {
           path="/login"
           element={!authUser ? <LoginPage /> : <Navigate to="/" />}
         />
+
+        <Route
+          path="/student/study-materials"
+          element={authUser?.role === "student" ? <StudentStudyMaterials /> : <Navigate to="/" />}
+        />
+
         <Route
           path="/signup"
           element={!authUser ? <SignUpPage /> : <Navigate to="/" />}

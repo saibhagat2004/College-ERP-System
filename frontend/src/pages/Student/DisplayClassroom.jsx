@@ -176,6 +176,12 @@ const DisplayClassroom = ({ authUser }) => {
 								>
 									Pay Fees
 								</Link>
+								<Link
+									to="/student/study-materials"
+									className="ml-3 inline-flex items-center justify-center rounded-xl border border-white/15 bg-transparent px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+								>
+									Study Materials
+								</Link>
 							</div>
 						</div>
 					</div>

@@ -196,6 +196,12 @@ const TeacherClassroom = ({ authUser }) => {
 										>
 											View class students
 										</Link>
+										<Link
+											to={`/teacher/study-materials`}
+											className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-white"
+										>
+											Study materials
+										</Link>
 									</div>
 
 									<div className="mt-5 border-t border-slate-200 pt-4">
