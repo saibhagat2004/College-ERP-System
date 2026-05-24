@@ -3,13 +3,21 @@ import Class from "../models/class.model.js";
 import Submission from "../models/submission.model.js";
 import { v2 as cloudinary } from "cloudinary";
 
+
 const uploadBufferToCloudinary = (fileBuffer, fileName) =>
 	new Promise((resolve, reject) => {
+
+		// remove extension from filename
+		const cleanFileName =
+			fileName.replace(/\.[^/.]+$/, "");
+
 		const stream = cloudinary.uploader.upload_stream(
 			{
-				resource_type: "auto",
+				resource_type: "image",
 				folder: "college-erp/assignments",
-				public_id: fileName,
+				public_id: cleanFileName,
+				use_filename: true,
+				unique_filename: false,
 			},
 			(error, result) => {
 				if (error) {
@@ -17,9 +25,11 @@ const uploadBufferToCloudinary = (fileBuffer, fileName) =>
 					return;
 				}
 
+				console.log(result);
 				resolve(result);
 			},
 		);
+
 		stream.end(fileBuffer);
 	});
 

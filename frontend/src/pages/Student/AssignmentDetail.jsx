@@ -194,6 +194,12 @@ const AssignmentDetail = () => {
 								<a href={assignment.fileUrl} target="_blank" rel="noreferrer" className="mt-1 inline-block text-sky-700 underline">
 									Open attached file
 								</a>
+
+								   <iframe
+									src={assignment.fileUrl}
+									width="100%"
+									height="600"
+									/>
 							</div>
 						)}
 					</div>
