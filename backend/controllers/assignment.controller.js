@@ -4,19 +4,56 @@ import Submission from "../models/submission.model.js";
 import { v2 as cloudinary } from "cloudinary";
 
 
+// const uploadBufferToCloudinary = (fileBuffer, fileName) =>
+// 	new Promise((resolve, reject) => {
+
+// 		// remove extension from filename
+// 		const cleanFileName =
+// 			fileName.replace(/\.[^/.]+$/, "");
+
+// 		const stream = cloudinary.uploader.upload_stream(
+// 			{
+// 				resource_type: "image",
+// 				folder: "college-erp/assignments",
+// 				public_id: cleanFileName,
+// 				use_filename: true,
+// 				unique_filename: false,
+// 			},
+// 			(error, result) => {
+// 				if (error) {
+// 					reject(error);
+// 					return;
+// 				}
+
+// 				console.log(result);
+// 				resolve(result);
+// 			},
+// 		);
+
+// 		stream.end(fileBuffer);
+// 	});
+
+
+
 const uploadBufferToCloudinary = (fileBuffer, fileName) =>
 	new Promise((resolve, reject) => {
 
-		// remove extension from filename
 		const cleanFileName =
 			fileName.replace(/\.[^/.]+$/, "");
 
+		const isPdf =
+			fileName.toLowerCase().endsWith(".pdf");
+
 		const stream = cloudinary.uploader.upload_stream(
 			{
-				resource_type: "image",
+				resource_type: isPdf ? "image" : "raw",
+
 				folder: "college-erp/assignments",
+
 				public_id: cleanFileName,
+
 				use_filename: true,
+
 				unique_filename: false,
 			},
 			(error, result) => {
@@ -25,7 +62,6 @@ const uploadBufferToCloudinary = (fileBuffer, fileName) =>
 					return;
 				}
 
-				console.log(result);
 				resolve(result);
 			},
 		);
